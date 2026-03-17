@@ -33,6 +33,14 @@ class BaseEditor(ABC):
         self.preset = preset
         self.llm = llm
 
+    def _estimate_max_tokens(self) -> int:
+        """Estimate required max_tokens from target_word_count.
+
+        Chinese text averages ~1.8 tokens/char; add 30% buffer for formatting.
+        """
+        hi = self.preset.target_word_count[1] if self.preset.target_word_count else 5000
+        return max(int(hi * 2.2), 4000)
+
     def generate(
         self,
         items: list[Item],
@@ -44,6 +52,7 @@ class BaseEditor(ABC):
         system_prompt = self._build_system_prompt()
         user_prompt = self._build_user_prompt(items, issue_label, user_hint)
         user_prompt += self._format_memory_prompt(memory_context)
+        max_tokens = self._estimate_max_tokens()
 
         for attempt in range(3):
             try:
@@ -53,7 +62,7 @@ class BaseEditor(ABC):
                         {"role": "user", "content": user_prompt},
                     ],
                     temperature=0.7,
-                    max_tokens=8000,
+                    max_tokens=max_tokens,
                 )
                 if not response:
                     self._backoff(attempt, "LLM returned empty")
@@ -79,13 +88,14 @@ class BaseEditor(ABC):
         user_prompt = self._build_user_prompt(items, issue_label, user_hint)
         user_prompt += self._format_memory_prompt(memory_context)
 
+        max_tokens = self._estimate_max_tokens()
         for chunk in self.llm.stream(
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
             temperature=0.7,
-            max_tokens=8000,
+            max_tokens=max_tokens,
         ):
             yield chunk
 

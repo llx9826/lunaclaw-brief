@@ -48,10 +48,11 @@ AI_CV_WEEKLY = PresetConfig(
     sections=[
         "core_conclusions", "events", "projects", "papers", "trends", "review",
     ],
-    target_word_count=(4000, 5500),
+    target_word_count=(3500, 5000),
     tone="sharp",
     min_sections=5,
-    min_word_count=3500,
+    min_word_count=3000,
+    max_word_count=5500,
     dedup_window_days=30,
     template="report",
     description="AI/CV/多模态技术周报，包含开源项目推荐、论文推荐、趋势分析等",
@@ -80,6 +81,7 @@ AI_DAILY = PresetConfig(
     tone="sharp",
     min_sections=2,
     min_word_count=600,
+    max_word_count=1800,
     dedup_window_days=3,
     template="report",
     description="AI 技术日报，快速了解当天最重要的 AI 技术动态",
@@ -114,10 +116,11 @@ FINANCE_WEEKLY = PresetConfig(
         "core_judgment", "macro_policy", "sector_events",
         "tech_finance", "strategy", "risk",
     ],
-    target_word_count=(4000, 5500),
+    target_word_count=(3500, 5000),
     tone="sharp",
     min_sections=5,
-    min_word_count=3500,
+    min_word_count=3000,
+    max_word_count=5500,
     dedup_window_days=14,
     template="report",
     description="金融投资周报，宏观分析、行业热点、投资策略建议",
@@ -145,6 +148,7 @@ FINANCE_DAILY = PresetConfig(
     tone="sharp",
     min_sections=2,
     min_word_count=600,
+    max_word_count=1800,
     dedup_window_days=3,
     template="report",
     description="金融快报日刊，每日市场要闻和投资信号",
@@ -180,6 +184,7 @@ STOCK_A_DAILY = PresetConfig(
     tone="sharp",
     min_sections=3,
     min_word_count=1200,
+    max_word_count=3000,
     dedup_window_days=3,
     template="report",
     description="A股沪深市场日报，大盘走势、板块轮动、北向资金、新股打新、异动分析",
@@ -209,6 +214,7 @@ STOCK_HK_DAILY = PresetConfig(
     tone="sharp",
     min_sections=3,
     min_word_count=1200,
+    max_word_count=3000,
     dedup_window_days=3,
     template="report",
     description="港股日报，恒生指数、南向资金、中概股、港股IPO、跨市场联动",
@@ -240,6 +246,7 @@ STOCK_US_DAILY = PresetConfig(
     tone="sharp",
     min_sections=3,
     min_word_count=1200,
+    max_word_count=3000,
     dedup_window_days=3,
     template="report",
     description="美股日报，S&P/NASDAQ走势、科技巨头、Fed政策、IPO预报、期权信号",
@@ -284,11 +291,33 @@ _custom = _load_custom_presets()
 PRESETS.update(_custom)
 
 
+# Editor types that have explicit weekly/daily counterparts
+_EDITOR_WEEKLY_MAP: dict[str, str] = {
+    "tech_daily": "tech_weekly",
+    "finance_daily": "finance_weekly",
+}
+_EDITOR_DAILY_MAP: dict[str, str] = {
+    "tech_weekly": "tech_daily",
+    "finance_weekly": "finance_daily",
+}
+
+
+def _derive_editor_type(base_editor: str, target_cycle: str) -> str:
+    """Pick the right editor type for the derived preset.
+
+    If a paired editor exists (e.g. tech_daily ↔ tech_weekly), use it.
+    Otherwise fall back to generic_weekly / generic_daily.
+    """
+    if target_cycle == "weekly":
+        return _EDITOR_WEEKLY_MAP.get(base_editor, "generic_weekly")
+    return _EDITOR_DAILY_MAP.get(base_editor, "generic_daily")
+
+
 def derive_preset(base_name: str, target_cycle: str) -> PresetConfig | None:
     """Derive a daily/weekly variant from an existing preset.
 
     For example, derive stock_a_weekly from stock_a_daily by adjusting
-    time_range_days, max_items, and target_word_count.
+    time_range_days, max_items, target_word_count, AND editor_type.
     """
     if base_name not in PRESETS:
         return None
@@ -301,12 +330,14 @@ def derive_preset(base_name: str, target_cycle: str) -> PresetConfig | None:
     if new_name in PRESETS:
         return PRESETS[new_name]
 
+    editor_type = _derive_editor_type(base.editor_type, target_cycle)
+
     if target_cycle == "weekly":
         derived = PresetConfig(
             name=new_name,
             display_name=base.display_name.replace("日报", "周报").replace("Daily", "Weekly"),
             cycle="weekly",
-            editor_type=base.editor_type,
+            editor_type=editor_type,
             topic=base.topic,
             sources=base.sources,
             time_range_days=7,
@@ -319,6 +350,7 @@ def derive_preset(base_name: str, target_cycle: str) -> PresetConfig | None:
             tone=base.tone,
             min_sections=max(base.min_sections, 4),
             min_word_count=2500,
+            max_word_count=5500,
             dedup_window_days=14,
             template=base.template,
             description=base.description.replace("日报", "周报").replace("daily", "weekly"),
@@ -329,7 +361,7 @@ def derive_preset(base_name: str, target_cycle: str) -> PresetConfig | None:
             name=new_name,
             display_name=base.display_name.replace("周报", "日报").replace("Weekly", "Daily"),
             cycle="daily",
-            editor_type=base.editor_type,
+            editor_type=editor_type,
             topic=base.topic,
             sources=base.sources,
             time_range_days=1,
@@ -342,6 +374,7 @@ def derive_preset(base_name: str, target_cycle: str) -> PresetConfig | None:
             tone=base.tone,
             min_sections=2,
             min_word_count=600,
+            max_word_count=1800,
             dedup_window_days=3,
             template=base.template,
             description=base.description.replace("周报", "日报").replace("weekly", "daily"),
