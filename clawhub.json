@@ -1,8 +1,8 @@
 {
   "name": "lunaclaw-brief",
   "display_name": "LunaClaw Brief",
-  "version": "4.0.0",
-  "description": "Pluggable AI-powered report engine with 7 presets (tech/finance/stock), 8 data sources, hybrid LLM intent router, streaming pipeline, cron scheduler, and multi-channel delivery.",
+  "version": "5.0.0",
+  "description": "Pluggable AI-powered report engine with three-level memory system, 7 presets (tech/finance/stock), 8 data sources, hybrid LLM intent router, streaming pipeline, cron scheduler, and multi-channel delivery.",
   "category": "productivity",
   "tags": [
     "report",
