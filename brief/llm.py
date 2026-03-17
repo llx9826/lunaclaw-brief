@@ -15,6 +15,38 @@ import os
 import requests
 
 
+class LLMUsage:
+    """Accumulated token usage and cost tracking across all LLM calls."""
+
+    def __init__(self):
+        self.total_prompt_tokens = 0
+        self.total_completion_tokens = 0
+        self.call_count = 0
+
+    def record(self, usage: dict):
+        self.total_prompt_tokens += usage.get("prompt_tokens", 0)
+        self.total_completion_tokens += usage.get("completion_tokens", 0)
+        self.call_count += 1
+
+    @property
+    def total_tokens(self) -> int:
+        return self.total_prompt_tokens + self.total_completion_tokens
+
+    @property
+    def estimated_cost_usd(self) -> float:
+        """Rough estimate based on GPT-4o-mini pricing ($0.15/1M in, $0.60/1M out)."""
+        return (self.total_prompt_tokens * 0.15 + self.total_completion_tokens * 0.60) / 1_000_000
+
+    def summary(self) -> dict:
+        return {
+            "calls": self.call_count,
+            "prompt_tokens": self.total_prompt_tokens,
+            "completion_tokens": self.total_completion_tokens,
+            "total_tokens": self.total_tokens,
+            "estimated_cost_usd": round(self.estimated_cost_usd, 4),
+        }
+
+
 class LLMClient:
     """Universal LLM client with OpenClaw auto-detection (OpenAI-compatible API)."""
 
@@ -37,6 +69,7 @@ class LLMClient:
             self._provider = "custom"
 
         self.timeout = llm_config.get("timeout", 180)
+        self.usage = LLMUsage()
 
         if not self.api_key:
             raise ValueError(
@@ -71,6 +104,8 @@ class LLMClient:
             resp = requests.post(url, headers=headers, json=payload, timeout=self.timeout)
             if resp.status_code == 200:
                 data = resp.json()
+                if "usage" in data:
+                    self.usage.record(data["usage"])
                 return data["choices"][0]["message"]["content"]
             print(f"[LLM] API error: {resp.status_code} - {resp.text[:200]}")
             return ""

@@ -113,7 +113,7 @@ class BriefScheduler:
                         sender = EmailSender(email_cfg)
                         html_path = result.get("html_path", "")
                         html_content = Path(html_path).read_text(encoding="utf-8") if html_path else ""
-                        subject = f"🦞 {preset.display_name} — #{result.get('issue_number', '?')}"
+                        subject = f"🦞 {preset.display_name} — {result.get('issue_label', '?')}"
                         sender.send(
                             subject=subject,
                             html_content=html_content,
@@ -124,7 +124,7 @@ class BriefScheduler:
                     wh_sender = WebhookSender(delivery)
                     md_path = result.get("md_path", "")
                     text = Path(md_path).read_text(encoding="utf-8")[:2000] if md_path else ""
-                    subject = f"🦞 {preset.display_name} — #{result.get('issue_number', '?')}"
+                    subject = f"🦞 {preset.display_name} — {result.get('issue_label', '?')}"
                     wh_sender.send(subject, text, result.get("html_path", ""))
 
             self.log.info(f"Job complete: {preset_name}")

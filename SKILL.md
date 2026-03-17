@@ -75,7 +75,10 @@ result = generate_report({
 - **Cron Scheduler**: Auto-generate reports on schedule with multi-channel push
 - **Custom Presets**: Create domain-specific presets via natural language
 - **Quality Control**: Auto-check structure/word count, retry if below threshold
-- **Historical Dedup**: Content fingerprinting with configurable time window
+- **Three-Level Memory**: Pluggable `MemoryStore` protocol with preset-scoped dedup:
+  - L1 `ItemStore` — item-id dedup (same article won't reuse)
+  - L2 `TopicStore` — keyword fingerprint diversity (same theme won't repeat)
+  - L3 `ContentStore` — claim extraction + negative constraint injection (same viewpoint won't appear in reviews)
 
 ## Architecture / 架构
 
@@ -88,6 +91,8 @@ result = generate_report({
 | Observer | `MiddlewareChain` for timing, metrics, custom hooks |
 | Factory | `create_sources()` / `create_editor()` |
 | Cache | `FileCache` with TTL for API responses |
+| Protocol | `MemoryStore` → ItemStore / TopicStore / ContentStore |
+| Facade | `MemoryManager` composes pluggable memory backends |
 
 ## Configuration / 配置
 

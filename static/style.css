@@ -407,6 +407,52 @@ body {
 }
 
 /* ═══════════════════════════════════
+   TABLES
+   ═══════════════════════════════════ */
+
+.table-wrapper {
+    overflow-x: auto;
+    margin: 12px 0;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+thead th {
+    background: rgba(249,115,22,0.08);
+    color: var(--accent-light);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+}
+
+tbody td {
+    padding: 8px 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+tbody tr:hover {
+    background: rgba(249,115,22,0.03);
+}
+
+/* ═══════════════════════════════════
    LINKS & INLINE
    ═══════════════════════════════════ */
 
@@ -499,38 +545,27 @@ em { font-style: italic; color: var(--text-secondary); }
 }
 
 /* ═══════════════════════════════════
-   PRINT / PDF
+   PRINT / PDF — preserve dark theme
    ═══════════════════════════════════ */
 
+@page {
+    size: A4;
+    margin: 10mm;
+}
+
 @media print {
-    body { background: #fff; color: #1a1a1a; font-size: 12px; }
-    .report-header {
-        background: #fff;
-        border-bottom: 2px solid #e5e7eb;
+    body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
     }
     .report-header::after { display: none; }
-    .report-header h1 { -webkit-text-fill-color: #ea580c; background: none; }
-    .vol-badge { background: #fff7ed; color: #ea580c; }
-    .luna-logo-img { filter: none; width: 72px; }
-    .stats-bar { background: #f8fafc; backdrop-filter: none; border-bottom: 1px solid #e5e7eb; }
-    .stat-card { background: #fff; border: 1px solid #e5e7eb; }
-    .stat-card .stat-num { color: #ea580c; }
-    .item-block { background: #fafafa; border: 1px solid #e5e7eb; box-shadow: none; }
-    .item-block:hover { border-color: #e5e7eb; box-shadow: none; }
-    .item-num { color: rgba(234,88,12,0.08); }
-    .section-header { background: #fefce8; border-left-color: #ea580c; }
-    .claw-card { background: #fff7ed; border-color: #f97316; }
+    .luna-logo-img { filter: none; }
+    .item-block:hover { border-color: var(--border-light); box-shadow: none; }
+    .stats-bar { backdrop-filter: none; -webkit-backdrop-filter: none; }
     .claw-card::before { display: none; }
-    .claw-card p { color: #9a3412; }
-    .claw-label { color: #ea580c; }
-    a { color: #2563eb; }
-    strong { color: #1a1a1a; }
-    p, li { color: #374151; }
-    h2, h3 { color: #1a1a1a; }
-    .section-icon { background: #f1f5f9; }
-    .kv-row { border-bottom-color: #e5e7eb; }
-    .kv-label { color: #9a3412; }
-    .kv-value { color: #374151; }
-    .report-footer { border-top: 1px solid #e5e7eb; }
-    .footer-divider::before, .footer-divider::after { background: #d1d5db; }
+    tbody tr:hover { background: none; }
+    .table-wrapper { page-break-inside: avoid; }
+    .item-block { page-break-inside: avoid; }
+    .section { page-break-inside: avoid; }
 }

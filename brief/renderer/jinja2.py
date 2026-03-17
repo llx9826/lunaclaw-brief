@@ -54,9 +54,9 @@ class Jinja2Renderer:
         luna_logo_b64 = self._load_logo_b64()
 
         html = template.render(
-            title=f"{preset.display_name} — Issue #{draft.issue_number}",
+            title=f"{preset.display_name} — {draft.issue_label}",
             display_name=preset.display_name,
-            issue_number=draft.issue_number,
+            issue_label=draft.issue_label,
             time_range=time_range,
             stats=stats,
             sections=sections,
@@ -77,7 +77,9 @@ class Jinja2Renderer:
         if _WEASY_OK:
             try:
                 pdf_path = self.output_dir / f"{prefix}_{ts}.pdf"
-                WeasyHTML(filename=str(html_path)).write_pdf(str(pdf_path))
+                WeasyHTML(filename=str(html_path), media_type="screen").write_pdf(
+                    str(pdf_path), presentational_hints=True
+                )
             except Exception as e:
                 print(f"⚠️ PDF generation failed: {e}")
                 pdf_path = None

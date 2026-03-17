@@ -45,9 +45,9 @@ outputs:
   - name: pdf_path
     type: string
     description: "Generated PDF path (requires WeasyPrint)"
-  - name: issue_number
-    type: integer
-    description: "Auto-incremented issue number"
+  - name: issue_label
+    type: string
+    description: "Date-based issue label (e.g. 2026-03-17 or 03.10~03.16)"
 
 entry: run.py
 function: generate_report

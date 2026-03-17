@@ -209,6 +209,16 @@ def _render_block(content: str) -> str:
                 i += 1
                 continue
 
+        # Markdown table (| col | col |)
+        if stripped.startswith("|") and "|" in stripped[1:]:
+            table_lines = [stripped]
+            i += 1
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                table_lines.append(lines[i].strip())
+                i += 1
+            html.append(_render_table(table_lines))
+            continue
+
         # Dash-style list items
         if stripped.startswith("- ") and not stripped.startswith("---"):
             list_items = [stripped[2:]]
@@ -247,6 +257,43 @@ def _flush_claw(html: list[str], claw_lines: list[str]):
     html.append(
         f'<div class="claw-card"><div class="claw-label">🦞 Claw 锐评</div>{items_html}</div>'
     )
+
+
+def _render_table(table_lines: list[str]) -> str:
+    """Convert markdown table lines to HTML <table>."""
+    rows: list[list[str]] = []
+    separator_idx = -1
+    for idx, line in enumerate(table_lines):
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if all(re.match(r"^[-:]+$", c) for c in cells if c):
+            separator_idx = idx
+            continue
+        rows.append(cells)
+
+    if not rows:
+        return ""
+
+    html_parts = ['<div class="table-wrapper"><table>']
+
+    if separator_idx == 1 and len(rows) >= 1:
+        header = rows[0]
+        html_parts.append("<thead><tr>")
+        for cell in header:
+            html_parts.append(f"<th>{_inline(cell)}</th>")
+        html_parts.append("</tr></thead>")
+        body_rows = rows[1:]
+    else:
+        body_rows = rows
+
+    html_parts.append("<tbody>")
+    for row in body_rows:
+        html_parts.append("<tr>")
+        for cell in row:
+            html_parts.append(f"<td>{_inline(cell)}</td>")
+        html_parts.append("</tr>")
+    html_parts.append("</tbody></table></div>")
+
+    return "".join(html_parts)
 
 
 def _inline(text: str) -> str:

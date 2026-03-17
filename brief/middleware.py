@@ -26,7 +26,7 @@ class PipelineContext:
     """管线上下文，贯穿全阶段，中间件可读写"""
 
     preset_name: str = ""
-    issue_number: int = 0
+    issue_label: str = ""
     started_at: float = field(default_factory=time.time)
 
     # 各阶段计时（秒）
@@ -119,6 +119,6 @@ class MetricsMiddleware(PipelineMiddleware):
             "phase_timings": ctx.phase_timings,
             "phase_counts": ctx.phase_counts,
             "preset": ctx.preset_name,
-            "issue_number": ctx.issue_number,
+            "issue_label": ctx.issue_label,
             "completed_at": datetime.now().isoformat(),
         }

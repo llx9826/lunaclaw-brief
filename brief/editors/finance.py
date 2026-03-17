@@ -87,13 +87,13 @@ class FinanceWeeklyEditor(BaseEditor):
 【字数要求】{word_lo}-{word_hi} 字，6 个章节缺一不可。"""
 
     def _build_user_prompt(
-        self, items: list[Item], issue_number: int, user_hint: str
+        self, items: list[Item], issue_label: str, user_hint: str
     ) -> str:
         now = datetime.now()
         since = now - timedelta(days=self.preset.time_range_days)
         time_range = f"{since.strftime('%Y-%m-%d')} ~ {now.strftime('%Y-%m-%d')}"
 
-        prompt = f"""请生成第 {issue_number} 期 {self.preset.display_name}。
+        prompt = f"""请生成 {issue_label} 期 {self.preset.display_name}。
 
 **时间范围**: {time_range}
 **内容统计**: {len(items)} 条金融资讯
@@ -160,10 +160,10 @@ class FinanceDailyEditor(BaseEditor):
 【字数要求】{word_lo}-{word_hi} 字。"""
 
     def _build_user_prompt(
-        self, items: list[Item], issue_number: int, user_hint: str
+        self, items: list[Item], issue_label: str, user_hint: str
     ) -> str:
         today = datetime.now().strftime("%Y-%m-%d")
-        prompt = f"""请生成第 {issue_number} 期 {self.preset.display_name}。
+        prompt = f"""请生成 {issue_label} 期 {self.preset.display_name}。
 
 **日期**: {today}
 **素材**: {len(items)} 条

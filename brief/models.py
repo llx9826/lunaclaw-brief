@@ -65,13 +65,13 @@ class ReportDraft:
 
     Attributes:
         markdown:      Raw Markdown content.
-        issue_number:  Auto-incremented issue number.
+        issue_label:   Date-based label (e.g. "2026-03-17" or "03.10~03.16").
         word_count:    Character count (auto-computed).
         quality_score: Set after QualityChecker evaluation.
     """
 
     markdown: str
-    issue_number: int
+    issue_label: str
     word_count: int = 0
     quality_score: float = 0.0
 
@@ -95,30 +95,28 @@ class QualityResult:
 
 
 @dataclass
+class ReportRequest:
+    """Normalized report request parsed from user input.
+
+    Decouples "what the user asked for" from "which preset to use",
+    enabling topic × period routing and unknown-topic handling.
+    """
+
+    topic: str          # normalized topic key ("ai", "finance", "stock_a", …)
+    period: str         # "daily" | "weekly"
+    focus: str = ""     # optional sub-focus from user hint (e.g. "腾讯和阿里")
+    raw_hint: str = ""  # original user input
+    preset_name: str = ""  # resolved preset name (may be empty if no match)
+    confidence: float = 1.0  # routing confidence (1.0 = exact match)
+    auto_created: bool = False  # True if preset was auto-generated for unknown topic
+
+
+@dataclass
 class PresetConfig:
     """Full configuration for a report type (preset).
 
     A preset defines everything the pipeline needs: which sources to fetch,
     how to score, which editor to invoke, quality thresholds, and template.
-
-    Attributes:
-        name:              Machine identifier ("ai_cv_weekly").
-        display_name:      Human-readable title ("AI/CV Weekly").
-        cycle:             "weekly" | "daily".
-        editor_type:       Registry key for the Editor ("tech_weekly", "finance_daily", …).
-        sources:           List of Source registry keys.
-        time_range_days:   Lookback window for fetching.
-        max_items:         Top-K items to select after scoring.
-        domain_keywords:   Keyword → weight map for scoring.
-        source_weights:    Source → weight map for scoring.
-        low_value_keywords: Keywords that trigger zero-score filtering.
-        sections:          Expected section names for quality checking.
-        target_word_count: (min, max) character count target.
-        tone:              "sharp" | "neutral".
-        min_sections:      Minimum ## headings for quality pass.
-        min_word_count:    Minimum character count for quality pass.
-        dedup_window_days: Historical dedup window.
-        template:          Jinja2 template name (without .html).
     """
 
     name: str
@@ -154,3 +152,6 @@ class PresetConfig:
     # Metadata
     description: str = ""
     show_disclaimer: bool = False
+
+    # Agent routing: topic family identifier for intent-based matching
+    topic: str = ""

@@ -1,8 +1,14 @@
 """LunaClaw Brief — Report Pipeline
 
-8-stage pipeline with middleware hooks and structured logging:
+8-stage pipeline with middleware hooks, structured logging, and
+pluggable three-level memory system:
 
-  Fetch → Score → Select → Dedup → Edit(LLM) → Quality → Render → Output
+  Fetch → Score → Select → Dedup(Memory) → Edit(LLM) → Quality → Render → Output
+
+Memory integration (via MemoryManager):
+  L1 ItemStore    — item_id dedup during Dedup phase
+  L2 TopicStore   — topic diversity reorder during Dedup phase
+  L3 ContentStore — claim recall/save around Edit phase
 
 Supports both synchronous (run) and streaming (run_stream) execution.
 """
@@ -14,10 +20,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Generator
 
-from brief.models import PresetConfig
+from brief.models import PresetConfig, ReportDraft
 from brief.sources import create_sources
 from brief.scoring import Scorer, Selector
-from brief.dedup import UsedItemStore, IssueCounter
+from brief.memory import MemoryManager
 from brief.editors import create_editor
 from brief.quality import QualityChecker
 from brief.renderer.jinja2 import Jinja2Renderer
@@ -27,6 +33,20 @@ from brief.middleware import (
     TimingMiddleware, MetricsMiddleware, PipelineMiddleware,
 )
 from brief.log import BriefLogger
+
+
+def _make_issue_label(cycle: str) -> str:
+    """Generate a date-based issue label.
+
+    Daily  → "2026-03-17"
+    Weekly → "03.10~03.16"
+    """
+    now = datetime.now()
+    if cycle == "weekly":
+        end = now
+        start = end - timedelta(days=6)
+        return f"{start.strftime('%m.%d')}~{end.strftime('%m.%d')}"
+    return now.strftime("%Y-%m-%d")
 
 
 class ReportPipeline:
@@ -78,6 +98,18 @@ class ReportPipeline:
         """
         yield from self._run_stream_sync(user_hint)
 
+    def _create_memory_manager(self) -> MemoryManager:
+        """Create the standard three-level memory manager."""
+        data_dir = self.project_root / "data"
+        llm_cfg = self.config.get("llm", {})
+        llm = None
+        try:
+            from brief.llm import LLMClient
+            llm = LLMClient(llm_cfg)
+        except Exception:
+            pass
+        return MemoryManager.create_default(data_dir, llm=llm)
+
     async def _run_async(self, user_hint: str, send_email: bool) -> dict:
         p = self.preset
         ctx = PipelineContext(preset_name=p.name)
@@ -87,6 +119,9 @@ class ReportPipeline:
         since = now - timedelta(days=p.time_range_days)
         time_range = f"{since.strftime('%Y-%m-%d')} ~ {now.strftime('%Y-%m-%d')}"
         log = self._log.bind(preset=p.name)
+
+        issue_label = _make_issue_label(p.cycle)
+        ctx.issue_label = issue_label
 
         print(f"\n{'='*50}")
         print(f"🦞 LunaClaw Brief — {p.display_name}")
@@ -131,11 +166,10 @@ class ReportPipeline:
         self._chain.fire_phase_end("select", ctx)
         log.info("Phase 3: Select", selected=len(selected))
 
-        # ── Phase 4: Dedup ──
+        # ── Phase 4: Dedup (Memory-driven) ──
         self._chain.fire_phase_start("dedup", ctx)
-        data_dir = self.project_root / "data"
-        store = UsedItemStore(data_dir / "used_items.json")
-        deduped = store.filter_unseen(selected, p.dedup_window_days)
+        memory = self._create_memory_manager()
+        deduped = memory.filter_items(selected, p.name, p.dedup_window_days)
         dup_count = len(selected) - len(deduped)
         is_rerun = False
 
@@ -146,20 +180,20 @@ class ReportPipeline:
 
         ctx.phase_counts["dedup"] = len(deduped)
         self._chain.fire_phase_end("dedup", ctx)
-        log.info("Phase 4: Dedup", kept=len(deduped), removed=dup_count,
+        log.info("Phase 4: Dedup (Memory)", kept=len(deduped), removed=dup_count,
                  rerun=is_rerun)
 
         # ── Phase 5: Edit (LLM) ──
         self._chain.fire_phase_start("edit", ctx)
         editor = create_editor(p, self.config)
-        counter = IssueCounter(data_dir)
-        issue_number = counter.next()
-        ctx.issue_number = issue_number
-        log.info(f"Phase 5: Edit (LLM) — issue #{issue_number}")
+
+        log.info(f"Phase 5: Edit (LLM) — {issue_label}")
         hint = user_hint
         if is_rerun:
             hint = (hint + "\n" if hint else "") + "（注意：本期为重新生成，请尽量提供不同的视角和表述。）"
-        draft = editor.generate(deduped, issue_number, hint)
+
+        memory_context = memory.recall_all(p.name)
+        draft = editor.generate(deduped, issue_label, hint, memory_context=memory_context)
         if not draft:
             log.error("LLM generation failed.")
             return {"success": False, "error": "llm_failed"}
@@ -178,7 +212,11 @@ class ReportPipeline:
 
         if not qr.passed:
             log.info("Retrying generation for quality...")
-            draft2 = editor.generate(deduped, issue_number, user_hint + "\n请确保所有章节完整。")
+            draft2 = editor.generate(
+                deduped, issue_label,
+                user_hint + "\n请确保所有章节完整。",
+                memory_context=memory_context,
+            )
             if draft2:
                 qr2 = checker.check(draft2.markdown)
                 if qr2.score > qr.score:
@@ -205,8 +243,10 @@ class ReportPipeline:
         if render_result.get("pdf_path"):
             log.info("  PDF generated", path=render_result["pdf_path"])
 
+        # ── Memory Save (post-render, before output) ──
         if not is_rerun:
-            store.mark_used(deduped, issue_number)
+            memory.save_all(p.name, issue_label, deduped, draft.markdown)
+            log.info("Memory saved", stores=[s.name for s in memory.stores])
 
         # ── Phase 8: Output (Email / Webhook) ──
         if send_email:
@@ -216,7 +256,7 @@ class ReportPipeline:
                 log.info("Phase 8: Email — sending...")
                 sender = EmailSender(email_cfg)
                 html_content = Path(render_result["html_path"]).read_text(encoding="utf-8")
-                subject = f"🦞 {p.display_name} — 第{issue_number}期"
+                subject = f"🦞 {p.display_name} — {issue_label}"
                 sender.send(
                     subject=subject,
                     html_content=html_content,
@@ -227,7 +267,7 @@ class ReportPipeline:
             if webhook_cfg and webhook_cfg.get("url"):
                 wh = WebhookSender(webhook_cfg)
                 wh.send(
-                    f"🦞 {p.display_name} — 第{issue_number}期",
+                    f"🦞 {p.display_name} — {issue_label}",
                     draft.markdown[:2000],
                     render_result.get("html_path", ""),
                 )
@@ -236,12 +276,12 @@ class ReportPipeline:
         self._chain.fire_pipeline_end(ctx)
 
         print(f"\n{'='*50}")
-        print(f"✅ Issue #{issue_number} — {p.display_name} generated!")
+        print(f"✅ {issue_label} — {p.display_name} generated!")
         print(f"{'='*50}\n")
 
         return {
             "success": True,
-            "issue_number": issue_number,
+            "issue_label": issue_label,
             "preset": p.name,
             "quality_score": qr.score,
             "word_count": draft.word_count,
@@ -255,6 +295,8 @@ class ReportPipeline:
         now = datetime.now()
         since = now - timedelta(days=p.time_range_days)
         time_range = f"{since.strftime('%Y-%m-%d')} ~ {now.strftime('%Y-%m-%d')}"
+
+        issue_label = _make_issue_label(p.cycle)
 
         # Phase 1-4: run synchronously, yield phase events
         yield {"type": "phase", "phase": "fetch", "status": "start"}
@@ -286,9 +328,8 @@ class ReportPipeline:
         yield {"type": "phase", "phase": "select", "status": "done", "count": len(selected)}
 
         yield {"type": "phase", "phase": "dedup", "status": "start"}
-        data_dir = self.project_root / "data"
-        store = UsedItemStore(data_dir / "used_items.json")
-        deduped = store.filter_unseen(selected, p.dedup_window_days)
+        memory = self._create_memory_manager()
+        deduped = memory.filter_items(selected, p.name, p.dedup_window_days)
         is_rerun = not deduped
         if is_rerun:
             deduped = selected
@@ -297,15 +338,15 @@ class ReportPipeline:
         # Phase 5: Streaming LLM generation
         yield {"type": "phase", "phase": "edit", "status": "start"}
         editor = create_editor(p, self.config)
-        counter = IssueCounter(data_dir)
-        issue_number = counter.next()
 
         hint = user_hint
         if is_rerun:
             hint = (hint + "\n" if hint else "") + "（注意：本期为重新生成，请尽量提供不同的视角和表述。）"
 
+        memory_context = memory.recall_all(p.name)
+
         markdown_chunks: list[str] = []
-        for chunk in editor.generate_stream(deduped, issue_number, hint):
+        for chunk in editor.generate_stream(deduped, issue_label, hint, memory_context=memory_context):
             markdown_chunks.append(chunk)
             yield {"type": "chunk", "content": chunk}
 
@@ -314,8 +355,7 @@ class ReportPipeline:
         yield {"type": "phase", "phase": "edit", "status": "done", "chars": len(full_markdown)}
 
         # Phase 6-7: Quality + Render
-        from brief.models import ReportDraft
-        draft = ReportDraft(markdown=full_markdown, issue_number=issue_number)
+        draft = ReportDraft(markdown=full_markdown, issue_label=issue_label)
 
         checker = QualityChecker(p)
         qr = checker.check(draft.markdown)
@@ -334,12 +374,12 @@ class ReportPipeline:
         render_result = renderer.render(draft, p, time_range, stats)
 
         if not is_rerun:
-            store.mark_used(deduped, issue_number)
+            memory.save_all(p.name, issue_label, deduped, draft.markdown)
 
         yield {
             "type": "result",
             "success": True,
-            "issue_number": issue_number,
+            "issue_label": issue_label,
             "preset": p.name,
             "quality_score": qr.score,
             "word_count": draft.word_count,

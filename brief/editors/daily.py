@@ -56,11 +56,11 @@ class DailyEditor(BaseEditor):
 【字数要求】总字数 {word_lo}-{word_hi} 字。"""
 
     def _build_user_prompt(
-        self, items: list[Item], issue_number: int, user_hint: str
+        self, items: list[Item], issue_label: str, user_hint: str
     ) -> str:
         today = datetime.now().strftime("%Y-%m-%d")
 
-        prompt = f"""请生成第 {issue_number} 期 {self.preset.display_name}。
+        prompt = f"""请生成 {issue_label} 期 {self.preset.display_name}。
 
 **日期**: {today}
 **素材数量**: {len(items)} 条

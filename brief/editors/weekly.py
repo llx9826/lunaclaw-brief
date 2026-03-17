@@ -95,7 +95,7 @@ class WeeklyEditor(BaseEditor):
 【字数要求】总字数 {word_lo}-{word_hi} 字，必须包含全部 6 个章节。"""
 
     def _build_user_prompt(
-        self, items: list[Item], issue_number: int, user_hint: str
+        self, items: list[Item], issue_label: str, user_hint: str
     ) -> str:
         now = datetime.now()
         since = now - timedelta(days=self.preset.time_range_days)
@@ -106,7 +106,7 @@ class WeeklyEditor(BaseEditor):
             if "CV" in i.meta.get("domain_tags", []) or "OCR" in i.meta.get("domain_tags", [])
         )
 
-        prompt = f"""请生成第 {issue_number} 期 {self.preset.display_name}。
+        prompt = f"""请生成 {issue_label} 期 {self.preset.display_name}。
 
 **时间范围**: {time_range}
 **内容统计**: {len(items)} 条（CV/OCR 相关：{cv_count} 条）
