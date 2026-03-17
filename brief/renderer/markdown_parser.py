@@ -181,15 +181,39 @@ def _render_block(content: str) -> str:
             i += 1
             continue
 
-        # Inside claw review
+        # Inside claw review — keep collecting until a structural break
         if in_claw:
-            if not stripped or stripped.startswith("### ") or stripped.startswith("## "):
+            if stripped.startswith("### ") or stripped.startswith("## "):
                 _flush_claw(html, claw_lines)
                 in_claw = False
                 claw_lines = []
-                if not stripped:
-                    i += 1
                 continue
+
+            # Blank line: look ahead to see if next non-blank line is still review text
+            if not stripped:
+                next_idx = i + 1
+                while next_idx < len(lines) and not lines[next_idx].strip():
+                    next_idx += 1
+                if next_idx < len(lines):
+                    next_line = lines[next_idx].strip()
+                    next_clean = _strip_list_marker(next_line)
+                    is_structural = (
+                        next_line.startswith("### ")
+                        or next_line.startswith("## ")
+                        or _KV_PATTERN.match(next_clean)
+                        or _CLAW_START.match(next_clean)
+                        or (next_line.startswith("| ") and "|" in next_line[1:])
+                    )
+                    if is_structural:
+                        _flush_claw(html, claw_lines)
+                        in_claw = False
+                        claw_lines = []
+                        i += 1
+                        continue
+                # Not a structural break — continue collecting as same Claw block
+                i += 1
+                continue
+
             if clean:
                 claw_lines.append(clean)
             i += 1
