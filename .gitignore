@@ -23,14 +23,13 @@ env/
 
 # Config (secrets)
 config.local.yaml
+.env
 
-# Output
+# Output (generated reports)
 output/
-data/
-!data/golden/
 
-# Internal docs
-ARCHITECTURE_ANALYSIS_AND_ACCEPTANCE.md
+# Data (runtime state)
+data/
 
 # OS
 .DS_Store

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            body { background: white !important; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+        }
+        .claw-comment {
+            border-left: 3px solid oklch(var(--p));
+            padding-left: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .tag-badge {
+            font-size: 0.65rem;
+            padding: 0.1rem 0.4rem;
+        }
+    </style>
+</head>
+<body class="bg-base-200 text-base-content">
+
+<div class="max-w-[720px] mx-auto px-4 py-8">
+
+{% block header %}
+<div class="text-center mt-6">
+    {% if luna_logo_b64 %}
+    <img src="data:image/png;base64,{{ luna_logo_b64 }}" alt="Luna" class="w-16 h-auto mx-auto mb-3">
+    {% else %}
+    <div class="mb-3"><span class="text-5xl">🦞</span></div>
+    {% endif %}
+
+    <h1 class="text-xl font-bold">
+        {{ title }}
+        <span class="badge badge-outline badge-sm ml-2 align-middle font-mono">{{ issue_label }}</span>
+    </h1>
+
+    {% if time_range %}
+    <p class="text-sm opacity-60 mt-1 font-mono">
+        {{ time_range.resolved_start[:10] }} ~ {{ time_range.resolved_end[:10] }} · {{ generated_at }}
+    </p>
+    {% endif %}
+</div>
+
+<div class="divider"></div>
+{% endblock %}
+
+{% block stats %}
+{% if metadata %}
+<div class="flex justify-center gap-6 py-3 mb-4">
+    <div class="text-center">
+        <div class="text-lg font-bold font-mono text-primary">{{ metadata.items_fetched }}</div>
+        <div class="text-xs opacity-50 uppercase tracking-wider">fetched</div>
+    </div>
+    <div class="text-center">
+        <div class="text-lg font-bold font-mono text-primary">{{ metadata.items_selected }}</div>
+        <div class="text-xs opacity-50 uppercase tracking-wider">selected</div>
+    </div>
+    <div class="text-center">
+        <div class="text-lg font-bold font-mono text-primary">{{ metadata.sources_used | length }}</div>
+        <div class="text-xs opacity-50 uppercase tracking-wider">sources</div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+<footer class="text-center mt-12 pb-8">
+    <div class="divider">
+        {% if luna_logo_b64 %}
+        <img src="data:image/png;base64,{{ luna_logo_b64 }}" alt="Luna" class="w-5 h-5 opacity-60">
+        {% else %}
+        🦞
+        {% endif %}
+    </div>
+    <p class="text-xs font-semibold opacity-70">{{ brand_full_name }}</p>
+    <p class="text-xs opacity-50 mt-0.5">{{ brand_tagline }} · {{ brand_author }}</p>
+</footer>
+
+</div>
+
+</body>
+</html>

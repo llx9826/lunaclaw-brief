@@ -48,16 +48,6 @@ sources_config:
         label: "Financial Times"
       - url: "https://feeds.reuters.com/reuters/businessNews"
         label: "Reuters Business"
-  skill:
-    timeout: 30
-    skills: []
-    # Example: use @nesdeq/openclaw-feeds for 26+ finance RSS feeds
-    # - name: "@nesdeq/openclaw-feeds"
-    #   function: "fetch_feeds"
-    #   params:
-    #     category: "finance"
-    #     limit: 30
-
 email:
   smtp_host: "smtp.qq.com"
   smtp_port: 465
@@ -65,19 +55,5 @@ email:
   password: ""       # put in config.local.yaml or env EMAIL_PASSWORD
   to_emails: []
 
-# Scheduled auto-generation (used by `python -m brief.scheduler`)
-# Each job specifies a preset, cron expression, and delivery channels.
-# Cron format: minute hour day month weekday (0=Sun, 1=Mon, ..., 6=Sat)
-schedule: []
-  # Example:
-  # - preset: stock_a_daily
-  #   cron: "0 18 * * 1-5"
-  #   delivery:
-  #     - type: email
-  #     - type: webhook
-  #       url: "https://hooks.slack.com/services/xxx"
-  #       webhook_type: slack
-  # - preset: ai_cv_weekly
-  #   cron: "0 9 * * 1"
-  #   delivery:
-  #     - type: email
+eval:
+  enabled: false

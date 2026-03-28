@@ -1,6 +1,30 @@
-# LunaClaw Brief — Dependencies
+# ClawCat Brief — Dependencies
+# Core LLM framework
+langchain-openai
+langgraph
+instructor
+
+# Data validation & config
+pydantic>=2.0
+pydantic-settings[yaml]
+
+# Data sources
+feedparser
+httpx
 aiohttp>=3.9
-requests>=2.31
+akshare
+pandas
+
+# Search engines
+ddgs
+baidusearch
+
+# Rendering
 jinja2>=3.1
+playwright
+
+# Config & utilities
 pyyaml>=6.0
-weasyprint>=60.0    # 可选，用于 HTML → PDF
+
+# Observability (optional)
+# langsmith

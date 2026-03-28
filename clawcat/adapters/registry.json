@@ -1,0 +1,214 @@
+[
+  {
+    "name": "hackernews",
+    "module": "clawcat.adapters.tech.hackernews",
+    "domains": ["tech", "startup", "ai"],
+    "language": "en",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": true,
+    "provides": ["news", "discussion"],
+    "description": "Hacker News stories via Algolia search API. Supports topic-specific queries.",
+    "best_for": "Global tech news and developer discussions",
+    "config_params": {
+      "queries": "list[str] — search keywords. Default: ['AI OR LLM OR machine learning']. Set to topic-relevant terms for better results.",
+      "min_points": "int — minimum upvote points. Default: 3."
+    },
+    "config_guidance": "Set queries to topic-relevant English keywords for targeted results. E.g. for OCR: ['OCR', 'text recognition', 'document AI']."
+  },
+  {
+    "name": "github_trending",
+    "module": "clawcat.adapters.tech.github_trending",
+    "domains": ["tech", "open-source", "ai"],
+    "language": "en",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": true,
+    "provides": ["repos", "trending", "competitor_analysis"],
+    "description": "GitHub multi-strategy repo search. Supports dynamic queries and sort strategies.",
+    "best_for": "Open-source project discovery, competitor/alternative analysis, tech trend tracking",
+    "config_params": {
+      "queries": "list[str] — search keywords derived from the report topic. Include synonyms, alternative names, AND competitor search terms (e.g. '<tool> alternative', '<category> framework vs'). REQUIRED.",
+      "strategies": "list[str] — 'rising' (new + fast-growing, best for trends), 'created' (brand-new projects), 'updated' (actively maintained). Default: ['rising', 'created', 'updated'].",
+      "min_stars": "int — minimum star count. Default: 3.",
+      "per_query": "int — results per query per strategy. Default: 8."
+    },
+    "config_guidance": "Always set queries. Include both the main topic and comparison terms (e.g. for OCR: ['OCR', 'text recognition', 'OCR vs', 'OCR alternative', 'document AI']). The 'rising' strategy finds repos created in the last 90 days that are gaining stars fast — ideal for discovering breakout projects."
+  },
+  {
+    "name": "hf_papers",
+    "module": "clawcat.adapters.tech.hf_papers",
+    "domains": ["ai", "ml", "research"],
+    "language": "en",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": true,
+    "provides": ["papers"],
+    "description": "Hugging Face daily trending papers",
+    "best_for": "AI/ML research papers and state-of-the-art models"
+  },
+  {
+    "name": "arxiv",
+    "module": "clawcat.adapters.tech.arxiv",
+    "domains": ["ai", "ml", "cv", "nlp", "research"],
+    "language": "en",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": true,
+    "provides": ["papers"],
+    "description": "arXiv academic papers (cs.CV, cs.LG, cs.AI, cs.CL)",
+    "best_for": "Academic papers in AI, computer vision, NLP"
+  },
+  {
+    "name": "36kr",
+    "module": "clawcat.adapters.news.kr36",
+    "domains": ["tech", "startup", "venture", "ai", "open-source"],
+    "language": "zh",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": true,
+    "provides": ["news", "industry_analysis"],
+    "description": "36氪 — 中国最大的科技创业媒体。支持热门文章 + 关键词搜索 + RSS 三路抓取。",
+    "best_for": "中国科技行业新闻、大厂动态、AI/开源项目发布、创业融资。技术类报告必选。",
+    "priority_hint": "tech 类报告中应优先选择此源，覆盖中国科技行业大事件（如大厂开源模型发布）",
+    "config_params": {
+      "queries": "list[str] — 搜索关键词，用于 36kr 搜索 API。可选，不设则只抓热门+RSS。"
+    },
+    "config_guidance": "技术类报告务必设置 queries 为主题中文关键词（如 ['OCR', '文字识别', '阿里 OCR']），以确保抓到相关行业新闻。"
+  },
+  {
+    "name": "wallstreetcn",
+    "module": "clawcat.adapters.news.wallstreetcn",
+    "domains": ["finance", "macro", "market"],
+    "language": "zh",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": true,
+    "provides": ["news", "flash"],
+    "description": "华尔街见闻 — Chinese financial news and market flash",
+    "best_for": "Real-time financial news, macro analysis, market events"
+  },
+  {
+    "name": "weibo",
+    "module": "clawcat.adapters.news.weibo",
+    "domains": ["social", "trending", "general"],
+    "language": "zh",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": false,
+    "provides": ["trending"],
+    "description": "微博热搜 — Weibo hot search trending topics",
+    "best_for": "Chinese social media trends and public sentiment"
+  },
+  {
+    "name": "tencent",
+    "module": "clawcat.adapters.news.tencent",
+    "domains": ["general", "politics", "society"],
+    "language": "zh",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": true,
+    "provides": ["news"],
+    "description": "腾讯新闻 — Tencent News aggregator",
+    "best_for": "General Chinese news across all categories"
+  },
+  {
+    "name": "v2ex",
+    "module": "clawcat.adapters.news.v2ex",
+    "domains": ["tech", "developer", "community"],
+    "language": "zh",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": true,
+    "provides": ["discussion"],
+    "description": "V2EX — Chinese developer community hot topics",
+    "best_for": "Developer community discussions and tech opinions"
+  },
+  {
+    "name": "cn_economy",
+    "module": "clawcat.adapters.news.cn_economy",
+    "domains": ["finance", "economy", "policy"],
+    "language": "zh",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": true,
+    "provides": ["news"],
+    "description": "东方财富经济新闻 — Eastmoney economic news",
+    "best_for": "Official Chinese economic news and policy updates"
+  },
+  {
+    "name": "akshare_stock",
+    "module": "clawcat.adapters.finance.akshare_stock",
+    "domains": ["finance", "stock", "market"],
+    "language": "zh",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": false,
+    "provides": ["data", "quotes"],
+    "description": "AKShare A股/港股指数行情数据",
+    "best_for": "Real-time A-share and HK stock index data"
+  },
+  {
+    "name": "akshare_macro",
+    "module": "clawcat.adapters.finance.akshare_macro",
+    "domains": ["finance", "macro", "economy"],
+    "language": "zh",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": false,
+    "provides": ["data", "indicators"],
+    "description": "AKShare 中国宏观经济指标 (PMI, CPI, etc.)",
+    "best_for": "Chinese macroeconomic indicators and statistical data"
+  },
+  {
+    "name": "duckduckgo",
+    "module": "clawcat.adapters.search.duckduckgo",
+    "domains": ["general", "tech", "ai", "finance", "news"],
+    "language": "multi",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": true,
+    "provides": ["news", "web_search"],
+    "description": "DuckDuckGo 搜索引擎。支持网页搜索和新闻搜索（新闻搜索自带日期字段）。免 API Key，可配代理。",
+    "best_for": "通用主题搜索、行业新闻发现、大厂动态追踪。技术类报告推荐使用 news 模式搜索中英文关键词。",
+    "priority_hint": "当需要覆盖最新行业新闻（如大厂开源发布、产品更新）时，必须选择此源",
+    "config_params": {
+      "queries": "list[str] — 搜索关键词列表。必填。中英文均可，建议覆盖核心主题及大厂名称。",
+      "max_results": "int — 每个 query 最大结果数。默认 10。",
+      "region": "str — 搜索区域，'cn-zh'（中文优先）或 'wt-wt'（全球）。默认 'wt-wt'。",
+      "use_news": "bool — 是否使用新闻搜索（有日期字段）。默认 True。",
+      "proxy": "str — 代理地址，如 'http://127.0.0.1:7890'。默认空。"
+    },
+    "config_guidance": "queries 必须包含主题关键词的中英文版本和大厂名称。例如 OCR 周报: ['OCR 开源', '阿里 OCR', '文字识别 开源', 'OCR open source model']。region 设为 'cn-zh' 可优先获取中文结果。"
+  },
+  {
+    "name": "baidu",
+    "module": "clawcat.adapters.search.baidu",
+    "domains": ["general", "tech", "finance", "policy"],
+    "language": "zh",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": false,
+    "provides": ["web_search"],
+    "description": "百度搜索引擎。免 API Key，国内直达，中文搜索质量高。",
+    "best_for": "中国国内新闻、大厂动态、政策解读、中文技术资讯。搜索结果无日期字段，建议配合其他有时间过滤的源使用。",
+    "priority_hint": "中文技术报告或国内行业分析时推荐使用",
+    "config_params": {
+      "queries": "list[str] — 搜索关键词列表。必填。建议使用中文关键词。",
+      "max_per_query": "int — 每个 query 最大结果数。默认 10。"
+    },
+    "config_guidance": "queries 应为中文关键词，覆盖主题核心词和相关大厂。例如: ['阿里 OCR 开源', '百度文字识别', 'OCR 技术 2026']。"
+  },
+  {
+    "name": "rss",
+    "module": "clawcat.adapters.news.rss",
+    "domains": ["general"],
+    "language": "en",
+    "china_accessible": false,
+    "requires_key": false,
+    "time_filterable": true,
+    "provides": ["news"],
+    "description": "Generic RSS/Atom feed aggregator (feedparser)",
+    "best_for": "Custom RSS feeds from any source"
+  }
+]

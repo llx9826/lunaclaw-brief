@@ -1,121 +1,104 @@
-# 🦞 ClawCat Brief — OpenClaw Skill
+# 🦞 clawCat-BRIEF — 通用 AI 简报引擎
 
-**Pluggable AI-Powered Report Engine** | 插件化 AI 智能简报引擎
+## 这个 skill 是什么
 
-## Overview / 概述
+clawCat-BRIEF 可以帮你生成各种题材的结构化简报：周报、日报、行业分析、竞品对比等。
 
-ClawCat Brief is an OpenClaw Skill that generates intelligent reports across multiple domains. It features a protocol-driven plugin architecture with:
+你只需要告诉我你想了解什么，我会自动选择合适的数据源、抓取最新信息、分析整理、生成可交付的 HTML 报告。
 
-- **9-stage pipeline** with async parallel fetch, grounding checks, and token budget management
-- **8 data sources** with pluggable adapter protocol
-- **9 editor strategies** (tech/finance/stock/generic)
-- **Scoring v2**: 4 pluggable dimensions (BM25/Recency/Engagement/Source) + MMR diversity reranking
-- **Grounding system**: 4 modular hallucination detectors
-- **Three-level memory**: item dedup → topic diversity → claim extraction
-- **Multi-model LLM router**: task-based model selection
-- **Token budget manager**: Map-Reduce batching, no truncation
-- Hybrid intent routing, streaming output, multi-channel delivery
+## 我能帮你做什么
 
-## Presets / 预设
+- 📰 **科技/AI 新闻简报** — 每日或每周的行业动态汇总
+- 📊 **股市/金融日报** — A 股、港股行情与宏观经济数据分析
+- 🔍 **技术专题周报** — 如 OCR、LLM、具身智能等特定领域的技术追踪
+- ⚔️ **开源竞品分析** — GitHub 上竞品项目的横向对比（stars、活跃度、技术路线）
+- 📑 **自定义主题** — 任意你关心的话题，我会自动匹配合适的数据源
 
-| Preset | Type | Description |
-|--------|------|-------------|
-| `ai_cv_weekly` | Tech | AI/CV/多模态技术深度周报 |
-| `ai_daily` | Tech | AI 技术日报 |
-| `finance_weekly` | Finance | 金融投资周报 |
-| `finance_daily` | Finance | 金融快报日刊 |
-| `stock_a_daily` | Stock | A 股日报（大盘/板块/北向资金/IPO/异动） |
-| `stock_hk_daily` | Stock | 港股日报（恒生/南向资金/中概股/IPO） |
-| `stock_us_daily` | Stock | 美股日报（S&P/NASDAQ/科技巨头/IPO） |
-| Custom | Any | via `--create-preset` or `derive_preset()` |
+## 开始之前
 
-**Auto-derive**: Weekly/daily variants auto-generated from any existing preset.
+在生成报告前，我需要确认几个事情，以确保报告符合你的预期：
 
-## Usage / 使用方式
+### 1. 你想了解什么主题？
+> 请告诉我你关注的领域或话题，例如：
+> - "OCR 技术"、"大模型"、"新能源汽车"
+> - "A 股市场"、"中国宏观经济"
+> - "AI Agent"、"具身智能"
 
-### Via CLI
+### 2. 报告类型和周期？
+> - **日报** — 覆盖过去 24-48 小时
+> - **周报** — 覆盖过去 7 天
 
-```bash
-python run.py                                    # AI/CV Weekly (default)
-python run.py --preset stock_a_daily             # A-share daily
-python run.py --hint "今天A股怎么样"               # Auto-route → stock_a_daily
-python run.py --hint "生成A股周报"                 # Auto-derive → stock_a_weekly
-python run.py --hint "帮我做一份教育日报"           # LLM auto-create preset
-python run.py --create-preset "我是新能源基金经理"  # Create custom preset
-python -m brief.scheduler                        # Run scheduled jobs
+### 3. 你有特别关注的方向吗？
+> 可选。例如：
+> - "重点关注阿里、百度等大厂动态"
+> - "需要开源项目的竞品分析"
+> - "关注政策变化和监管动向"
+> - "想看学术论文的最新进展"
+
+### 4. 报告风格？
+> - **专业分析型** — 数据驱动，适合投研和决策
+> - **行业资讯型** — 快速概览，适合了解动态
+> - **深度评论型** — 带有 Claw 锐评，观点鲜明
+
+## 示例用法
+
+```
+"做个每日 AI 新闻"
+"OCR 技术周报，重点关注大厂开源动态和竞品分析"
+"今天 A 股怎么样"
+"帮我做一份 LLM 推理优化的周报"
+"中国宏观经济周报，关注 PMI 和 CPI"
 ```
 
-### Via OpenClaw Skill API
+## 数据源覆盖
 
-```python
-from run import generate_report
+我会根据你的主题自动选择最合适的数据源组合：
 
-result = generate_report({
-    "preset": "stock_hk_daily",
-    "hint": "重点关注腾讯和美团",
-    "send_email": True,
-})
+| 数据类型 | 来源 | 说明 |
+|---------|------|------|
+| 🔍 搜索引擎 | DuckDuckGo、百度 | 全网搜索行业新闻，覆盖大厂动态 |
+| 🐙 开源项目 | GitHub | 三策略搜索（新发布 + 快速上升 + 活跃维护） |
+| 📰 科技新闻 | 36 氪、HackerNews | 中国 + 全球科技行业新闻 |
+| 📚 学术论文 | HuggingFace Papers、arXiv | AI/ML 最新研究 |
+| 💹 金融数据 | AKShare、华尔街见闻 | A 股行情、宏观经济指标 |
+| 🗣 社交热点 | 微博、V2EX | 社交舆情和开发者讨论 |
+| 📡 综合新闻 | 腾讯新闻、东方财富、RSS | 多渠道信息补充 |
+
+## 报告包含什么
+
+每份报告包含以下内容：
+
+1. **全文摘要** — 2-3 句话概括核心要点
+2. **焦点头条** — 本期最重要的 1-3 个事件
+3. **行业动态/大厂新闻** — 主要企业的最新动向
+4. **开源竞品分析**（如选择了 GitHub）— 相关项目的横向对比
+5. **学术/研究进展**（如选择了论文源）— 最新研究成果
+6. **社区热议** — 开发者社区的讨论焦点
+7. **Claw 锐评** — 犀利、有态度的 AI 点评（有理有据）
+
+## 输出格式
+
+- **HTML 报告** — 美观的网页格式，可直接浏览器打开
+- **PDF 报告** — 可打印的文档格式（需要安装 Playwright）
+- **JSON 数据** — 结构化的 `Brief` 对象，可供程序消费
+
+## 注意事项
+
+- 所有分析严格绑定时间范围，日报不会混入旧闻，周报只覆盖本周
+- 重要结论会尽量附带数据来源和证据
+- 已报道过的条目会自动去重，下次不会重复
+- 报告生成需要调用 LLM，通常需要 4-8 分钟
+
+## 技术实现
+
+基于 LangGraph 编排的多步管道：
+
+```
+Planner → Fetch(并行) → Dedup → Select → Summarize(并行) → Plan → Write(并行) → Check → Render
 ```
 
-## Key Capabilities / 核心能力
-
-- **Scoring v2**: Pluggable `ScoringDimension` protocol — BM25 relevance, HN-style time decay, Reddit-style engagement, source trust weighting. Configurable weights per preset.
-- **MMR Selection**: Maximal Marginal Relevance balances relevance and diversity to avoid redundant content.
-- **Grounding Pipeline**: 4 modular `GroundingChecker` implementations — temporal, entity, numeric, structure validation. Composable via `GroundingPipeline`.
-- **Token Budget**: `tiktoken`-based counting + Map-Reduce batching for long inputs + sentence-boundary output trimming.
-- **Multi-Model Router**: `LLMClient` routes `chat`/`classify`/`summarize` to different models for cost optimization.
-- **Async Parallel Fetch**: `asyncio.gather` for concurrent data source fetching.
-- **Content Engagement**: Prompt engineering with hook-first, contrast anchoring, data highlighting, audience targeting.
-- **Three-Level Memory**: Pluggable `MemoryStore` protocol — item dedup, topic diversity, claim extraction.
-- **Hybrid Intent Router**: Regex (instant) + LLM classification (fallback) for preset routing.
-- **Streaming Output**: `pipeline.run_stream()` yields progress events + content chunks.
-- **Multi-Channel Delivery**: Email (SMTP), Webhook (Slack/DingTalk/Feishu/custom).
-- **Configurable Brand**: Single-point brand config propagates to all templates.
-
-## Architecture / 架构
-
-| Pattern | Where |
-|---------|-------|
-| Protocol | `ScoringDimension` / `SelectionStrategy` / `GroundingChecker` / `MemoryStore` |
-| Adapter | `BaseSource` → 8 source adapters |
-| Strategy | `BaseEditor` → 9 editor strategies |
-| Pipeline | 9-stage `ReportPipeline` (async + stream) |
-| Registry | `@register_source` / `@register_editor` decorators |
-| Observer | `MiddlewareChain` for timing, metrics, custom hooks |
-| Router | `LLMClient._resolve_model()` for task-based model selection |
-| Factory | `create_sources()` / `create_editor()` / `GroundingPipeline.create_default()` |
-| Facade | `MemoryManager` / `GroundingPipeline` |
-| Cache | `FileCache` with TTL |
-
-## Configuration / 配置
-
-```yaml
-# config.yaml
-brand:
-  name: "ClawCat"
-  full_name: "ClawCat Brief"
-  tagline: "AI-Powered Report Engine"
-  author: "by llx & Luna"
-
-llm:
-  model: gpt-4o-mini
-  model_routes:
-    classify: gpt-4o-mini
-    summarize: gpt-4o-mini
-  context_window: 128000
-  output_reserve: 8000
-```
-
-Secrets in `config.local.yaml` (gitignored). Auto-detects OpenClaw environment.
-
-## Output / 输出
-
-- **HTML**: Self-contained dark-theme report (financial terminal aesthetic)
-- **PDF**: Dark-theme preserved via WeasyPrint
-- **Markdown**: Raw LLM output
-- **Email**: HTML body + PDF attachment
-- **Webhook**: Slack/DingTalk/Feishu/custom HTTP POST
+使用 instructor 确保 LLM 输出为结构化 Pydantic 对象，4 维 Grounding 校验确保事实准确性。
 
 ---
 
-*Built by llx & Luna 🐱 — where the claw meets the code.* 🦞
+*clawCat-BRIEF · Built by llx & Luna 🐱* 🦞
