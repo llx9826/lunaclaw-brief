@@ -1,4 +1,4 @@
-# 🦞 clawCat-BRIEF
+# 🦞 clawCat-brief
 
 AI 驱动的通用简报引擎 — 用户说一句话，自动理解需求、选择数据源、多步生成、结构化校验，输出 HTML / PDF / PNG / Markdown 简报。
 
