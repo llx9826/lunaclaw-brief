@@ -74,17 +74,25 @@ class NumericGrounder(GroundingChecker):
     ) -> GroundingResult:
         source_text = " ".join(f"{item.title} {item.raw_text}" for item in items)
         source_nums = {m.group(0).strip() for m in self._NUM_RE.finditer(source_text)}
+        source_cores = set()
+        for sn in source_nums:
+            source_cores.update(_extract_num_core(sn))
 
         issues: list[GroundingIssue] = []
         for num in report_nums:
-            if num not in source_nums:
-                issues.append(GroundingIssue(
-                    checker=self.name,
-                    severity="info",
-                    message=f"Numeric claim not in sources: {num}",
-                    span=num,
-                ))
+            cores = _extract_num_core(num)
+            if any(c in source_cores for c in cores):
+                continue
+            if num in source_nums:
+                continue
+            issues.append(GroundingIssue(
+                checker=self.name,
+                severity="warning",
+                message=f"数值 {num} 在素材中找不到来源，可能为 LLM 编造",
+                span=num,
+            ))
 
         total = len(report_nums) or 1
-        score = max(1.0 - len(issues) / total * 0.5, 0.0)
-        return GroundingResult(passed=True, score=score, issues=issues)
+        grounded = total - len(issues)
+        score = grounded / total
+        return GroundingResult(passed=score >= 0.5, score=score, issues=issues)

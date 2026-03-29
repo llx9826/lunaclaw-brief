@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 BATCH_SIZE = 5
 
 SUMMARIZE_SYSTEM = """\
-你是一位行业分析师。请用 2-3 句话摘要每条素材。
+你是一位行业分析师。请用 2-3 句话摘要每条素材，并提取关键数值。
 
 关注维度（摘要必须紧扣）：
 {focus_areas}
@@ -29,12 +29,23 @@ SUMMARIZE_SYSTEM = """\
 - 第二句说清「为什么重要」或「对谁有影响」
 - 如果素材与关注维度无关，摘要开头标注「[边缘]」
 
+key_facts 要求（极其重要）：
+- 提取素材中所有关键数值，格式为 "指标名: 数值"
+- 例如："上证指数: 3913.42点"、"涨幅: +2.3%"、"融资额: 5亿美元"
+- 这些数值将作为后续写作的唯一事实依据，必须精确照搬原文数字
+
 返回 JSON 数组，每条素材一个摘要。
 """
 
 
+class ItemSummary(BaseModel):
+    title: str = ""
+    summary: str = ""
+    key_facts: list[str] = []
+
+
 class BatchSummary(BaseModel):
-    summaries: list[dict]
+    summaries: list[ItemSummary]
 
 
 def get_selected_items(state: PipelineState) -> list[Item]:
@@ -75,11 +86,14 @@ def summarize_batch_node(state: PipelineState) -> dict:
         max_retries=get_max_retries(),
     )
 
+    out: list[dict] = []
     for s, item in zip(result.summaries, items):
-        s.setdefault("title", item.title)
-        s.setdefault("source", item.source)
-        s.setdefault("url", item.url)
-        s.setdefault("published_at", item.published_at or "")
+        d = s.model_dump()
+        d.setdefault("title", item.title)
+        d.setdefault("source", item.source)
+        d.setdefault("url", item.url)
+        d.setdefault("published_at", item.published_at or "")
+        out.append(d)
 
     logger.info("Summarized batch of %d items", len(items))
-    return {"summaries": result.summaries}
+    return {"summaries": out}

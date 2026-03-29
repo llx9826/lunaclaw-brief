@@ -52,14 +52,16 @@ def test_entity_not_found():
 def test_numeric_in_sources():
     """Numbers present in source text should pass."""
     checker = NumericGrounder()
-    result = checker.check("增长了15%，营收1500亿", _make_items())
-    assert result.score > 0.5
+    result = checker.check("增长了12%，营收1500亿", _make_items())
+    assert result.passed
+    assert result.score >= 0.5
 
 
 def test_numeric_not_in_sources():
-    """Fabricated numbers should be flagged."""
+    """Fabricated numbers should be flagged and blocked (score < 0.5)."""
     checker = NumericGrounder()
-    result = checker.check("股价暴涨99.99%", _make_items())
+    result = checker.check("股价暴涨99.99%，市值达到8888亿", _make_items())
+    assert not result.passed, "NumericGrounder must block fabricated numbers"
     assert any("99.99%" in i.span for i in result.issues)
 
 

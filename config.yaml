@@ -10,6 +10,7 @@ brand:
 llm:
   base_url: "https://coding.dashscope.aliyuncs.com/v1"
   model: "kimi-k2.5"
+  validator_model: ""  # 数值校验用的小模型（如 qwen-turbo），留空则用主模型
   timeout: 180
   # api_key: put in config.local.yaml or env BAILIAN_API_KEY
 

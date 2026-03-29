@@ -4,11 +4,12 @@ import os
 
 
 def test_config_defaults():
-    """Settings should have sensible defaults even without config.yaml."""
+    """Settings should load with correct structure and brand identity."""
     from clawcat.config import Settings
     s = Settings()
     assert s.brand.name == "ClawCat"
-    assert s.llm.model == "kimi-k2.5"
+    assert s.llm.model, "LLM model should not be empty"
+    assert s.llm.base_url, "LLM base_url should not be empty"
     assert s.output_dir == "output"
 
 

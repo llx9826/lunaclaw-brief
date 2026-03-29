@@ -27,6 +27,7 @@ class BrandSettings(BaseModel):
 class LLMSettings(BaseModel):
     base_url: str = "https://coding.dashscope.aliyuncs.com/v1"
     model: str = "kimi-k2.5"
+    validator_model: str = ""
     api_key: str = ""
     timeout: int = 180
     max_retries: int = 2

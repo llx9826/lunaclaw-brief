@@ -2,7 +2,11 @@
 import asyncio
 from datetime import datetime, timedelta
 
+import pytest
 
+
+@pytest.mark.network
+@pytest.mark.asyncio
 async def test_ddg():
     from clawcat.adapters.search.duckduckgo import fetch
     since = datetime.now() - timedelta(days=7)
@@ -20,6 +24,8 @@ async def test_ddg():
     print()
 
 
+@pytest.mark.network
+@pytest.mark.asyncio
 async def test_baidu():
     from clawcat.adapters.search.baidu import fetch
     since = datetime.now() - timedelta(days=7)

@@ -26,5 +26,11 @@ def get_model() -> str:
     return get_settings().llm.model
 
 
+def get_validator_model() -> str:
+    """Cheap/fast model for llm_validator checks. Falls back to main model."""
+    s = get_settings().llm
+    return s.validator_model or s.model
+
+
 def get_max_retries() -> int:
     return get_settings().llm.max_retries
