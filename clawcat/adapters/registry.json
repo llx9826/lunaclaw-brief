@@ -210,5 +210,26 @@
     "provides": ["news"],
     "description": "Generic RSS/Atom feed aggregator (feedparser)",
     "best_for": "Custom RSS feeds from any source"
+  },
+  {
+    "name": "skill_proxy",
+    "module": "clawcat.adapters.search.skill_proxy",
+    "domains": ["general", "tech", "ai", "finance", "news"],
+    "language": "multi",
+    "china_accessible": true,
+    "requires_key": false,
+    "time_filterable": true,
+    "provides": ["news", "web_search", "data"],
+    "description": "外部 Skill 代理适配器。将 ClawHub/Cursor 上的搜索类 skill（如 miaoda_unified）封装为统一数据源。需在 config 中指定 skill_module。",
+    "best_for": "桥接已安装的第三方搜索 skill，扩展数据源覆盖范围。适用于 ClawHub 生态中的专业数据 skill。",
+    "config_params": {
+      "skill_module": "str — 要调用的 skill Python 模块路径（如 'miaoda_unified.search'）。必填。",
+      "skill_function": "str — 模块中的搜索函数名。默认 'search'。",
+      "queries": "list[str] — 搜索关键词列表。必填。",
+      "max_results": "int — 每个 query 最大结果数。默认 10。",
+      "source_label": "str — 在报告中显示的数据源名称。默认取 skill_module 的最后一段。",
+      "extra_config": "dict — 透传给 skill 函数的额外参数。"
+    },
+    "config_guidance": "skill_module 指向已安装的搜索 skill 的 Python 模块。例如使用 miaoda_unified: skill_module='miaoda_unified.search', queries=['AI', '大模型']。确保对应 skill 已通过 pip 或 clawhub 安装到本地环境。"
   }
 ]
